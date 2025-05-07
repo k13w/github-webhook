@@ -189,6 +189,26 @@ func updateLocalRepo(repoPath, branch string) error {
 	}
 	log.Printf("Pull concluído com sucesso. Saída:\n%s", string(pullOutput))
 
+	// Executar source do devtoolset
+	log.Printf("Executando source /opt/rh/devtoolset-8/enable")
+	sourceCmd := exec.Command("bash", "-c", "source /opt/rh/devtoolset-8/enable")
+	sourceOutput, err := sourceCmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Erro ao executar source. Saída do comando:\n%s", string(sourceOutput))
+		return fmt.Errorf("erro ao executar source: %v", err)
+	}
+	log.Printf("Source executado com sucesso. Saída:\n%s", string(sourceOutput))
+
+	// Executar configure
+	log.Printf("Executando ./configure")
+	configureCmd := exec.Command("bash", "-c", "./configure --enable-epoll=yes --enable-prere=no --enable-vip=no --enable-packetver=20220406")
+	configureOutput, err := configureCmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Erro no configure. Saída do comando:\n%s", string(configureOutput))
+		return fmt.Errorf("erro ao executar configure: %v", err)
+	}
+	log.Printf("Configure executado com sucesso. Saída:\n%s", string(configureOutput))
+
 	// Mostrar status final
 	log.Printf("Executando git status para verificar estado final")
 	statusCmd := exec.Command("git", "status")

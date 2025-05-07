@@ -172,29 +172,42 @@ func updateLocalRepo(repoPath, branch string) error {
 	// Fetch latest changes
 	log.Printf("Executando git fetch origin %s", branch)
 	fetchCmd := exec.Command("git", "fetch", "origin", branch)
-	if output, err := fetchCmd.CombinedOutput(); err != nil {
-		log.Printf("Saída do comando fetch: %s", string(output))
+	fetchOutput, err := fetchCmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Erro no fetch. Saída do comando:\n%s", string(fetchOutput))
 		return fmt.Errorf("erro ao buscar alterações: %v", err)
 	}
-	log.Println("Fetch concluído com sucesso")
+	log.Printf("Fetch concluído com sucesso. Saída:\n%s", string(fetchOutput))
 
 	// Pull latest changes
 	log.Printf("Executando git pull origin %s", branch)
 	pullCmd := exec.Command("git", "pull", "origin", branch)
-	if output, err := pullCmd.CombinedOutput(); err != nil {
-		log.Printf("Saída do comando pull: %s", string(output))
+	pullOutput, err := pullCmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Erro no pull. Saída do comando:\n%s", string(pullOutput))
 		return fmt.Errorf("erro ao fazer pull: %v", err)
 	}
-	log.Println("Pull concluído com sucesso")
+	log.Printf("Pull concluído com sucesso. Saída:\n%s", string(pullOutput))
 
 	// Reset to origin/branch
 	log.Printf("Executando git reset --hard origin/%s", branch)
 	resetCmd := exec.Command("git", "reset", "--hard", fmt.Sprintf("origin/%s", branch))
-	if output, err := resetCmd.CombinedOutput(); err != nil {
-		log.Printf("Saída do comando reset: %s", string(output))
+	resetOutput, err := resetCmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Erro no reset. Saída do comando:\n%s", string(resetOutput))
 		return fmt.Errorf("erro ao resetar para origin/%s: %v", branch, err)
 	}
-	log.Println("Reset concluído com sucesso")
+	log.Printf("Reset concluído com sucesso. Saída:\n%s", string(resetOutput))
+
+	// Mostrar status final
+	log.Printf("Executando git status para verificar estado final")
+	statusCmd := exec.Command("git", "status")
+	statusOutput, err := statusCmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Erro ao verificar status. Saída do comando:\n%s", string(statusOutput))
+	} else {
+		log.Printf("Status final do repositório:\n%s", string(statusOutput))
+	}
 
 	return nil
 }

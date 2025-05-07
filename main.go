@@ -189,16 +189,6 @@ func updateLocalRepo(repoPath, branch string) error {
 	}
 	log.Printf("Pull concluído com sucesso. Saída:\n%s", string(pullOutput))
 
-	// Reset to origin/branch
-	log.Printf("Executando git reset --hard origin/%s", branch)
-	resetCmd := exec.Command("git", "reset", "--hard", fmt.Sprintf("origin/%s", branch))
-	resetOutput, err := resetCmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Erro no reset. Saída do comando:\n%s", string(resetOutput))
-		return fmt.Errorf("erro ao resetar para origin/%s: %v", branch, err)
-	}
-	log.Printf("Reset concluído com sucesso. Saída:\n%s", string(resetOutput))
-
 	// Mostrar status final
 	log.Printf("Executando git status para verificar estado final")
 	statusCmd := exec.Command("git", "status")

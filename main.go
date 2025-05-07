@@ -63,9 +63,9 @@ func main() {
 		}
 
 		contentType := r.Header.Get("Content-Type")
-		if !strings.Contains(contentType, "application/json") && !strings.Contains(contentType, "application/x-www-form-urlencoded") {
-			log.Printf("Content-Type inválido: %s (esperado: application/json ou application/x-www-form-urlencoded)", contentType)
-			http.Error(w, "Content-Type must be application/json or application/x-www-form-urlencoded", http.StatusBadRequest)
+		if !strings.Contains(contentType, "application/json") {
+			log.Printf("Content-Type inválido: %s (esperado: application/json)", contentType)
+			http.Error(w, "Content-Type must be application/json", http.StatusBadRequest)
 			return
 		}
 
@@ -87,18 +87,6 @@ func main() {
 		}
 		log.Printf("Tamanho do payload recebido: %d bytes", len(payload))
 		log.Printf("Primeiros 100 caracteres do payload: %s", string(payload[:min(100, len(payload))]))
-
-		// Se o conteúdo for form-urlencoded, precisamos extrair o payload do campo 'payload'
-		if strings.Contains(contentType, "application/x-www-form-urlencoded") {
-			formData, err := parseFormData(string(payload))
-			if err != nil {
-				log.Printf("Erro ao processar form data: %v", err)
-				http.Error(w, "Error processing form data", http.StatusBadRequest)
-				return
-			}
-			payload = []byte(formData)
-			log.Printf("Payload extraído do form data: %s", string(payload[:min(100, len(payload))]))
-		}
 
 		// Verify signature
 		if !verifySignature(payload, signature, webhookSecret) {
@@ -207,13 +195,4 @@ func min(a, b int) int {
 		return a
 	}
 	return b
-}
-
-func parseFormData(formData string) (string, error) {
-	// O formato esperado é: payload={"ref":"refs/heads/main",...}
-	parts := strings.SplitN(formData, "=", 2)
-	if len(parts) != 2 || parts[0] != "payload" {
-		return "", fmt.Errorf("formato inválido do form data")
-	}
-	return parts[1], nil
 }

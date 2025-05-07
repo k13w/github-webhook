@@ -51,10 +51,21 @@ func main() {
 	http.HandleFunc("/webhook", func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 		log.Printf("=== Nova requisição recebida em %s ===", startTime.Format("2006-01-02 15:04:05.000"))
+		log.Printf("Headers recebidos:")
+		for name, values := range r.Header {
+			log.Printf("  %s: %s", name, strings.Join(values, ", "))
+		}
 
 		if r.Method != http.MethodPost {
 			log.Printf("Método não permitido: %s", r.Method)
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		contentType := r.Header.Get("Content-Type")
+		if !strings.Contains(contentType, "application/json") {
+			log.Printf("Content-Type inválido: %s (esperado: application/json)", contentType)
+			http.Error(w, "Content-Type must be application/json", http.StatusBadRequest)
 			return
 		}
 
@@ -75,6 +86,7 @@ func main() {
 			return
 		}
 		log.Printf("Tamanho do payload recebido: %d bytes", len(payload))
+		log.Printf("Primeiros 100 caracteres do payload: %s", string(payload[:min(100, len(payload))]))
 
 		// Verify signature
 		if !verifySignature(payload, signature, webhookSecret) {
@@ -88,6 +100,7 @@ func main() {
 		var webhook GitHubWebhook
 		if err := json.Unmarshal(payload, &webhook); err != nil {
 			log.Printf("Erro ao decodificar o payload: %v", err)
+			log.Printf("Payload completo recebido: %s", string(payload))
 			http.Error(w, "Error parsing webhook payload", http.StatusBadRequest)
 			return
 		}
@@ -175,4 +188,11 @@ func updateLocalRepo(repoPath, branch string) error {
 	log.Println("Reset concluído com sucesso")
 
 	return nil
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
